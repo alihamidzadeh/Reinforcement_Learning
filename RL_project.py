@@ -322,9 +322,27 @@ def policy_iteration(env, custom_map, max_ittr=30, theta=0.01, discount_factor=0
     policy_stable = False
     while not policy_stable and ittr < max_ittr:
         # policy evaluation #TODO
+        while True:
+            delta = 0
+            for s in range(env.observation_space.n):
+                v = V[s]
+                a = policy[s]
+                V[s] = sum([p * (r + discount_factor * V[s1]) for p, s1, r, _ in P[s][a]])
+                delta = max(delta, abs(v - V[s]))
+            if delta < theta:
+                break
 
         # policy improvement #TODO
-
+        policy_stable = True
+        for s in range(env.observation_space.n):
+            old_action = np.argmax(policy)
+            action_values = np.zeros(env.action_space.n)
+            for a in range(env.action_space.n):
+                action_values[a] = sum([p * (r + discount_factor * V[s1]) for p, s1, r, _ in P[s][a]])
+            best_action = np.argmax(action_values)
+            policy[s] = best_action
+            if old_action != best_action:
+                policy_stable = False
         ittr += 1
     return V, policy
 
