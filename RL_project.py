@@ -321,9 +321,9 @@ def policy_iteration(env, custom_map, max_ittr=30, theta=0.01, discount_factor=0
     ittr = 0
     policy_stable = False
     while not policy_stable and ittr < max_ittr:
-        # policy evaluation
+        # policy evaluation #TODO
 
-        # policy improvement
+        # policy improvement #TODO
 
         ittr += 1
     return V, policy
@@ -336,6 +336,7 @@ def first_visit_mc_prediction(env, policy, num_episodes, gamma):
     V = np.zeros(env.observation_space.n)
     N = np.zeros(env.observation_space.n)
 
+    # TODO
     # loop in range num_episodes(for each episode)
     # for i_episode in range(num_episodes):
 
@@ -353,6 +354,7 @@ def every_visit_mc_prediction(env, policy, num_episodes, gamma):
     V = np.zeros(env.observation_space.n)
     N = np.zeros(env.observation_space.n)
 
+    # TODO
     # loop in range num_episodes(for each episode)
     # for i_episode in range(num_episodes):
 
