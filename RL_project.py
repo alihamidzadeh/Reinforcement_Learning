@@ -57,7 +57,7 @@ def modify_rewards_P(envP, custom_map, hole_reward, goal_reward, move_reward):
 
 class ModifyRewards(gym.Wrapper):
     def __init__(
-        self, env, custom_map, hole_reward=-10, goal_reward=10, move_reward=-0.1
+            self, env, custom_map, hole_reward=-10, goal_reward=10, move_reward=-0.1
     ):
         super().__init__(env)
         self.hole_reward = hole_reward
@@ -81,7 +81,7 @@ class ModifyRewards(gym.Wrapper):
 
 
 ############################### plot methods : you can use them to plot 
-                              # your policy and state value
+# your policy and state value
 
 
 #  plot policy with arrows in four direction to understand policy better
@@ -211,7 +211,7 @@ def plot_state_value(state_value, custom_map):
 
 
 ############################### handler methods : you don't need to know them,
-                              # they have been used in other methods
+# they have been used in other methods
 
 
 def act_wrt_prob(probability):
@@ -244,7 +244,7 @@ def get_flaten_custom_map(custom_map):
 
 
 ############################### helper methods : you can use them in your code to create
-                              # random policy and check your policy
+# random policy and check your policy
 
 
 # it gives a randome walk policy w.r.t costum 
@@ -263,7 +263,8 @@ def get_init_policy(custom_map):
 
     return policy
 
-# it gives walk policy according to direction w.r.t costum 
+
+# it gives walk policy according to direction w.r.t costum
 def get_policy_direction(direction, custom_map):  # direction :"left", "down", "right"
     policy = {}
     left_sub_dict = {0: 1.0, 1: 0.0, 2: 0.0, 3: 0.0}
@@ -311,11 +312,11 @@ def do_policy(env, policy, episdoes=5):
 # the state values for each state in the environment using the Bellman equation and the current policy. In the Policy Improvement
 # step, you improve the policy by choosing the action that maximizes the value function for each state.
 def policy_iteration(env, custom_map, max_ittr=30, theta=0.01, discount_factor=0.9):
-    policy = get_init_policy(custom_map)   # it gives a random-walk policy
+    policy = get_init_policy(custom_map)  # it gives a random-walk policy
     V = np.zeros(env.observation_space.n)  # you can change it with any init value
-    P = env.P                              # This attribute stores the transition probabilities
-                                           # and rewards for each possible action in each possible
-                                           # state of the environment.
+    P = env.P  # This attribute stores the transition probabilities
+    # and rewards for each possible action in each possible
+    # state of the environment.
 
     # loop till policy_stable becomes True or itter >= max_ittr
     ittr = 0
@@ -326,25 +327,30 @@ def policy_iteration(env, custom_map, max_ittr=30, theta=0.01, discount_factor=0
             delta = 0
             for s in range(env.observation_space.n):
                 v = V[s]
-                a = policy[s]
-                V[s] = sum([p * (r + discount_factor * V[s1]) for p, s1, r, _ in P[s][a]])
-                delta = max(delta, abs(v - V[s]))
+                V[s] = sum(policy[s][a] * sum(p * (r + discount_factor * V[ss]) for p, ss, r, _ in P[s][a]) for a in
+                           range(env.action_space.n))
+                delta = max(delta, abs(V[s] - v))
             if delta < theta:
                 break
 
         # policy improvement #TODO
         policy_stable = True
         for s in range(env.observation_space.n):
-            old_action = np.argmax(policy)
-            action_values = np.zeros(env.action_space.n)
-            for a in range(env.action_space.n):
-                action_values[a] = sum([p * (r + discount_factor * V[s1]) for p, s1, r, _ in P[s][a]])
-            best_action = np.argmax(action_values)
-            policy[s] = best_action
-            if old_action != best_action:
+            old_action = np.argmax(policy[s])
+            newActionVal = [sum(p * (r + discount_factor * V[s_]) for p, s_, r, _ in P[s][a]) for a in
+                            range(env.action_space.n)]
+            newAct = np.argmax(newActionVal)
+            if old_action != newAct:
                 policy_stable = False
+            policy[s] = np.eye(env.action_space.n)[newAct]
         ittr += 1
-    return V, policy
+
+    p = {}
+    for s in range(env.observation_space.n):
+        arr = policy[s].tolist()
+        p[s] = {i: arr[i] for i in range(len(arr))}
+
+    return V, p
 
 
 # This algorithm allows you to estimate the state values of a given policy by sampling episodes and
@@ -355,13 +361,46 @@ def first_visit_mc_prediction(env, policy, num_episodes, gamma):
     N = np.zeros(env.observation_space.n)
 
     # TODO
-    # loop in range num_episodes(for each episode)
-    # for i_episode in range(num_episodes):
+    for eachEpisode in range(num_episodes):
+        episode = []
+        state = env.reset()
+        done = False
+        while not done:
+            if type(state) == tuple:
+                values = list(policy[state[0]].values())
+                keys = list(policy[state[0]].keys())
+            else:
+                values = list(policy[state].values())
+                keys = list(policy[state].keys())
+            action = random.choices(keys, weights=values)[0]
+            state_n, rew, _, _, _ = env.step(action)
+            if rew == env.goal_reward:
+                print("goal")
+                break
+            episode.append((state, action, rew))
+            state = state_n
 
-    # generate episode w.r.t policy
-
-    # loop for each step of episode , t= T-1, T-2, ..., 0
-
+        visited_states = set()
+        for epis in range(len(episode)):
+            state, _, _ = episode[t]
+            if type(state) == tuple:
+                if state[0] not in visited_states:
+                    visited_states.add(state[0])
+                    G = 0
+                    for z in range(t, len(episode)):
+                        _, _, rew = episode[z]
+                        G = G + gamma ** (z - t) * rew
+                    N[state[0]] = N[state[0]] + 1
+                    V[state[0]] = V[state[0]] + (1 / N[state[0]]) * (G - V[state[0]])
+            else:
+                if state not in visited_states:
+                    visited_states.add(state)
+                    G = 0
+                    for z in range(t, len(episode)):
+                        _, _, rew = episode[z]
+                        G = G + (gamma ** (z - t) * rew)
+                    N[state] = N[state] + 1
+                    V[state] = V[state] + (1 / N[state]) * (G - V[state])
     return V
 
 
@@ -373,13 +412,43 @@ def every_visit_mc_prediction(env, policy, num_episodes, gamma):
     N = np.zeros(env.observation_space.n)
 
     # TODO
-    # loop in range num_episodes(for each episode)
-    # for i_episode in range(num_episodes):
+    for epis in range(num_episodes):
+        episode = []
+        state = env.reset()
+        d = False
+        while not d:
+            if type(state) == tuple:
+                values = list(policy[state[0]].values())
+                keys = list(policy[state[0]].keys())
+            else:
+                values = list(policy[state].values())
+                keys = list(policy[state].keys())
 
-    # generate episode w.r.t policy
+            act = random.choices(keys, weights=values)[0]
+            state_n, rew, _, _, _ = env.step(act)
+            episode.append((state, act, rew))
+            state = state_n
+            if rew == env.goal_reward:
+                print("goal")
+                break
+        g = 0
+        visited_states = set()
 
-    # loop for each step of episode , t= T-1, T-2, ..., 0
-
+        for z in range(len(episode) - 1, -1, -1):
+            state, act, r = episode[z]
+            g = gamma * g + r
+            if type(state) == tuple:
+                if state[0] not in visited_states:
+                    visited_states.add(state[0])
+                    N[state[0]] = N[state[0]] + 1
+                    alpha = 1 / N[state[0]]
+                    V[state[0]] = V[state[0]] + (alpha * (g - V[state[0]]))
+            else:
+                if state not in visited_states:
+                    visited_states.add(state)
+                    N[state] = N[state] + 1
+                    alpha = 1 / N[state]
+                    V[state] = V[state] + (alpha * (g - V[state]))
     return V
 
 
@@ -387,41 +456,42 @@ def every_visit_mc_prediction(env, policy, num_episodes, gamma):
 
 custom_map_1 = ["HFSFFFFG"]
 
-custom_map_2 = ["SFFFF", 
-                "HHHFF", 
-                "FFFFH", 
-                "FFFFF", 
+custom_map_2 = ["SFFFF",
+                "HHHFF",
+                "FFFFH",
+                "FFFFF",
                 "FFFFG"]
 
-custom_map_3 = ["SFFFF", 
-                "HFFFF", 
-                "HFFFF", 
-                "HFFFF", 
+custom_map_3 = ["SFFFF",
+                "HFFFF",
+                "HFFFF",
+                "HFFFF",
                 "GFFFF"]
 
-custom_map_4 = ["FFFSFFF", 
-                "FHHHHFF", 
-                "FFFFFFF", 
-                "HFFFFFF", 
+custom_map_4 = ["FFFSFFF",
+                "FHHHHFF",
+                "FFFFFFF",
+                "HFFFFFF",
                 "FGFFFFF"]
 
 custom_map_5 = ["HFSFFFFG"]
 
-custom_map_6 = ["HFSFFFFG", 
-                "HFFFFFFF", 
+custom_map_6 = ["HFSFFFFG",
+                "HFFFFFFF",
                 "HFFFFFFF"]
 
-custom_map_7 = ["SFFFF", 
-                "FFFFH", 
-                "HHFFF", 
-                "HFFFH", 
+custom_map_7 = ["SFFFF",
+                "FFFFH",
+                "HHFFF",
+                "HFFFH",
                 "FFFFG"]
 
-custom_map_8 = ["HFFSFFH", 
-                "FFFFFFF", 
-                "FFFFFFF", 
+custom_map_8 = ["HFFSFFH",
+                "FFFFFFF",
+                "FFFFFFF",
                 "GFFHFFG"]
 #############################
+
 if __name__ == "__main__":
     map = custom_map_3
     env = gym.make("FrozenLake-v1", render_mode="human", desc=map, is_slippery=True)
@@ -451,16 +521,16 @@ if __name__ == "__main__":
         # action = 2
         # next_state, reward, done, truncated, info = env.step(action)
         # rewards += reward
-        if done:
-            print(rewards)
-            break
+        # if done:
+        #     print(rewards)
+        #     break
 
-    # V, policy = policy_iteration(env, map, theta=0.0001,discount_factor=0.99)
+    V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.99)
 
-    # plot_state_value(V, map)
+    plot_state_value(V, map)
     # plot_policy_arrows(policy, map)
-    # plot_policy_terminal(policy, map)
-    # do_policy(env, policy, episdoes=5)
+    plot_policy_terminal(policy, map)
+    do_policy(env, policy, episdoes=2)
 
     # num_episodes = 10000
     # gamma = 0.9
