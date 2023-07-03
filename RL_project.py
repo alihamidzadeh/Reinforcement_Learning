@@ -494,12 +494,12 @@ custom_map_8 = ["HFFSFFH",
 
 if __name__ == "__main__":
     # map = custom_map_1
-    map = custom_map_2
-    env = gym.make("FrozenLake-v1", render_mode="human", desc=map, is_slippery=False)
+    map = custom_map_4
+    env = gym.make("FrozenLake-v1", render_mode="human", desc=map, is_slippery=True)
     # env = gym.make("FrozenLake-v1", desc=map, is_slippery=True)
     env = ModifyRewards(
         # env, custom_map=map, hole_reward=-0.1, goal_reward=1, move_reward=-0.1
-        env, custom_map=map, hole_reward=-4, goal_reward=10, move_reward=-0.9
+        env, custom_map=map, hole_reward=-5, goal_reward=5, move_reward=-0.5
 
     )
     env.reset()
@@ -507,13 +507,13 @@ if __name__ == "__main__":
     ###
     policy = get_init_policy(map)
     # plot_policy_arrows(policy, map)
-    do_policy(env, policy)
+    do_policy(env, policy, episdoes=10)
 
-    rewards = 0
-    for t in range(100):
-        action = env.action_space.sample()
-        next_state, reward, done, truncated, info = env.step(action)
-        rewards += reward
+    # rewards = 0
+    # for t in range(100):
+    #     action = env.action_space.sample()
+    #     next_state, reward, done, truncated, info = env.step(action)
+    #     rewards += reward
 
         # action = 2
         # next_state, reward, done, truncated, info = env.step(action)
@@ -524,19 +524,19 @@ if __name__ == "__main__":
         # action = 2
         # next_state, reward, done, truncated, info = env.step(action)
         # rewards += reward
-        if done:
-            print("rewards: ", rewards)
-            break
+        # if done:
+        #     print("rewards: ", rewards)
+        #     break
 
     # V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=1)
-    # V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.9)
+    V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.9)
     # V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.5)
-    V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.1)
+    # V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.1)
     #
     plot_state_value(V, map)
     # plot_policy_arrows(policy, map)
     plot_policy_terminal(policy, map)
-    do_policy(env, policy, episdoes=3)
+    # do_policy(env, policy, episdoes=3)
 
     # num_episodes = 10000
     # gamma = 0.9
