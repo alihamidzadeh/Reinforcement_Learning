@@ -499,7 +499,11 @@ if __name__ == "__main__":
     # env = gym.make("FrozenLake-v1", desc=map, is_slippery=True)
     env = ModifyRewards(
         # env, custom_map=map, hole_reward=-0.1, goal_reward=1, move_reward=-0.1
-        env, custom_map=map, hole_reward=-5, goal_reward=5, move_reward=-0.5
+        # env, custom_map=map, hole_reward=-5, goal_reward=5, move_reward=-0.5
+        # env, custom_map=map, hole_reward=-3, goal_reward=7, move_reward=-4
+        # env, custom_map=map, hole_reward=-3, goal_reward=7, move_reward=-2
+        # env, custom_map=map, hole_reward=-3, goal_reward=7, move_reward=0
+        env, custom_map=map, hole_reward=-3, goal_reward=7, move_reward=2
 
     )
     env.reset()
@@ -515,18 +519,18 @@ if __name__ == "__main__":
     #     next_state, reward, done, truncated, info = env.step(action)
     #     rewards += reward
 
-        # action = 2
-        # next_state, reward, done, truncated, info = env.step(action)
-        # rewards += reward
-        # action = 1
-        # next_state, reward, done, truncated, info = env.step(action)
-        # rewards += reward
-        # action = 2
-        # next_state, reward, done, truncated, info = env.step(action)
-        # rewards += reward
-        # if done:
-        #     print("rewards: ", rewards)
-        #     break
+    # action = 2
+    # next_state, reward, done, truncated, info = env.step(action)
+    # rewards += reward
+    # action = 1
+    # next_state, reward, done, truncated, info = env.step(action)
+    # rewards += reward
+    # action = 2
+    # next_state, reward, done, truncated, info = env.step(action)
+    # rewards += reward
+    # if done:
+    #     print("rewards: ", rewards)
+    #     break
 
     # V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=1)
     V, policy = policy_iteration(env, map, theta=0.0001, discount_factor=0.9)
@@ -544,4 +548,3 @@ if __name__ == "__main__":
 
     # plot_state_value(V_MC, map)
     time.sleep(2)
-
