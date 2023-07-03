@@ -494,7 +494,7 @@ custom_map_8 = ["HFFSFFH",
 
 if __name__ == "__main__":
     # map = custom_map_1
-    map = custom_map_4
+    map = custom_map_6
     env = gym.make("FrozenLake-v1", render_mode="human", desc=map, is_slippery=True)
     # env = gym.make("FrozenLake-v1", desc=map, is_slippery=True)
     env = ModifyRewards(
